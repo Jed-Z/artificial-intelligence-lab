@@ -1,0 +1,311 @@
+﻿\documentclass[a4paper, 11pt]{article}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{listings}
+\geometry{scale=0.8}
+\linespread{1.5}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+\lstset{frame=shadowbox,
+    language=Prolog,
+    aboveskip=3mm,
+    belowskip=3mm,
+    showstringspaces=false,
+    columns=flexible,
+    basicstyle={\small\ttfamily},
+    keywordstyle=\color{blue},
+    commentstyle=\color{dkgreen},
+    stringstyle=\color{mauve},
+    breaklines=true,
+    breakatwhitespace=true,
+    tabsize=3
+}
+
+\title{	
+\normalfont \normalsize
+\textsc{School of Data and Computer Science, Sun Yat-sen University} \\ [25pt] %textsc small capital letters
+\rule{\textwidth}{0.5pt} \\[0.4cm] % Thin top horizontal rule
+\huge  E06 Queries on KB \\ % The assignment title
+\rule{\textwidth}{2pt} \\[0.5cm] % Thick bottom horizontal rule
+\author{17341203 Yixin Zhang}
+\date{\normalsize\today}
+}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+
+\section{Problem Description}
+Given a KB \texttt{Restaurants.pl}, which describes the distribution of branches of 10 well-known restaurants in Guangzhou. 
+
+For example, \texttt{restaurant(ajukejiacai,2007,yuecai)} means that \texttt{ajukejiacai} was founded in 2007 and is a restaurant of \texttt{yuecai}. \texttt{branch(ajukejiacai,xintiandi)} means that \texttt{ajukejiacai} has a branch in \texttt{xintiandi}. \texttt{district(xintiandi,panyu)} means that \texttt{xintiandi} is an area of \texttt{panyu} district.
+
+Please formulate each of the following questions as a query using Prolog's notation, pose it to Prolog, and obtain Prolog's answer:
+\begin{enumerate}
+  \item What restaurants have branches in beigang? 
+  \item What districts have restaurants of yuecai and xiangcai?
+  \item What restaurants have the least number of branches?
+  \item What areas have two or more restaurants?
+\item Which restaurant has the longest history?
+\item What restaurants have at least 10 branches?
+\end{enumerate}
+Please define the new relation below using Prolog and test it.
+\begin{itemize}
+\item sameDistrict(Restaurant1, Restaurant2): Restaurant1 and Restaurant2 have one or more branches in the same district.
+\end{itemize}
+
+
+
+
+You should write down a listing that shows the queries you submitted to Prolog, and the answer returned. Hand in a file named \textsf{E06\_YourNumber.pdf}, and send it to \textsf{ai\_201901@foxmail.com}
+
+
+\section{Codes and Results}
+\subsection{Six Queries}
+
+\begin{enumerate}
+\item What restaurants have branches in beigang? 
+\begin{lstlisting}
+?- setof(X, branch(X,beigang), Result).
+Result = [huangmenjimifan, mixuebingcheng, shaxianxiaochi].
+\end{lstlisting}
+
+
+\item What districts have restaurants of yuecai and xiangcai?
+
+For convenience, I define a new auxiliary rule `categoryDistrict' which gives names of districts where there is at least one restaurant offering food of a specific category. To do such thing, `assertz/1' is used. Then this auxiliary rule is used to find the districts that have both yuecai and xiangcai.
+
+Note that in my code `R' means restaurants, `C' means categories, `A' means areas, `D' means districts.
+\begin{lstlisting}
+?- assertz((categoryDistrict(C,D):-restaurant(R,_,C),branch(R,A), district(A,D))).
+true.
+
+?- setof(D, (categoryDistrict(yuecai,D),categoryDistrict(xiangcai,D)), Result).
+Result = [haizhu, liwan, panyu, tianhe, yuexiu].
+\end{lstlisting}
+
+
+\item What restaurants have the least number of branches?
+\begin{enumerate}
+    \item Step 1: Find branches of each restaurant
+    \begin{lstlisting}
+?- setof(A,branch(R,A),As).
+R = ajukejiacai,
+As = [shatainan, xintiandi, yongfu] ;
+R = dagangxianmiaoshaoji,
+As = [beishan, cencun, changxing, dongpu, fangcun, gaosheng, huadong, kecun, nanpudadao|...] ;
+R = diandude,
+As = [bainaohui, huachengdadao, huifudong, linhe, panfu, shiqiao, tianhebei, yangji, youtuobangshiguang|...] ;
+R = hongmenyan,
+As = [xintiandi, zhilanwan] ;
+... % omitted
+    \end{lstlisting}
+    
+    \item Step 2: Count their branches
+    \begin{lstlisting}
+?- setof(
+|        Count,
+|        As^( restaurant(R,_,_), setof(A,branch(R,A),As), length(As,Count)),
+|        Counts
+|    ).
+R = ajukejiacai,
+Counts = [3] ;
+R = dagangxianmiaoshaoji,
+Counts = [11] ;
+R = diandude,
+Counts = [10] ;
+R = hongmenyan,
+Counts = [2] ;
+R = huangmenjimifan,
+Counts = [7] ;
+R = mixuebingcheng,
+Counts = [12] ;
+R = muwushaokao,
+Counts = [10] ;
+R = shaxianxiaochi,
+Counts = [3] ;
+R = tongxianghui,
+Counts = [10] ;
+R = yangguofu,
+Counts = [4].
+    \end{lstlisting}
+    
+    \item Step 3: Make a list of counts
+    \begin{lstlisting}
+?- findall(
+|        Counts,
+|        setof(
+|            Count,
+|            As^( restaurant(R,_,_), setof(A,branch(R,A),As), length(As,Count)),
+|            Counts
+|        ),
+|        CountList
+|    ).
+CountList = [[3], [11], [10], [2], [7], [12], [10], [3], [10],[4]].
+    \end{lstlisting}
+    
+    \item Step 4: Find the minimum value in the list
+    \begin{lstlisting}
+min_list(CountList, MinCount).
+    \end{lstlisting}
+    
+    \item Step 5: Find the restaurant whose branch count equals to the minimum value
+    \begin{lstlisting}
+?- setof(
+|        R,
+|        Count^As^CountList^(
+|            findall(
+|                Counts,
+|                setof(
+|                    Count,
+|                    As^( restaurant(R,_,_), setof(A,branch(R,A),As), length(As,Count)),
+|                    Counts
+|                ),
+|                CountList
+|            ),
+|            min_list(CountList, MinCount), setof(A,branch(R,A),As), length(As,Count), Count = MinCount
+|            ),
+|            Result
+|    ).
+MinCount = 2,
+Result = [hongmenyan].
+    \end{lstlisting}
+    
+    \item Result: The result is hongmenyan. It has only 2 branches.
+\end{enumerate}
+
+
+\item What areas have two or more restaurants?
+
+We use nested `setof' to accomplish this. The inner one gives those restaurants (`Rs') which are in area `A'; Then the outer one counts the restaurants correspoding to different areas, and select those areas with a quantity greater than 2. To count the number of elements in a list, function `length/2' is used.
+\begin{lstlisting}
+?- setof(
+|        A,
+|        Count^ Rs^ (
+|            setof(R, branch(R,A), Rs),
+|            length(Rs, Count), Count>=2
+|        ),
+|        Result
+|    ).
+Result = [bainaohui, beigang, dongpu, shiqiao, tianhebei, xintiandi, yongfu, yuancun].
+\end{lstlisting}
+
+\item Which restaurant has the longest history?
+
+The idea is similar to Question 3, but this one is much easier. No more explanations needed.
+\begin{lstlisting}
+?- setof(
+|        R,
+|        YearList^Y^(
+|            findall(
+|                Ys,
+|                setof(Y,C^restaurant(R,Y,C),Ys),
+|                YearList
+|            ), min_list(YearList, MinYear), restaurant(R,Y,_), Y = MinYear
+|        ),
+|        Result
+|    ).
+MinYear = 1935,
+Result = [huangmenjimifan].
+\end{lstlisting}
+
+
+\item What restaurants have at least 10 branches?
+
+The idea is quite similar to Question 4.
+\begin{lstlisting}
+?- setof(
+|        R,
+|        Count^ As^ (
+|            setof(A, (branch(R,A)), As),
+|            length(As, Count), Count>=10
+|        ),
+|        Result
+|    ).
+Result = [dagangxianmiaoshaoji, diandude, mixuebingcheng, muwushaokao, tongxianghui].
+\end{lstlisting}
+
+\end{enumerate}
+
+\subsection{Same District Relation}
+
+Define the same district rule as below.
+\begin{lstlisting}
+sameDistrict(R1,R2):-branch(R1,A1),branch(R2,A2),district(A1,D),district(A2,D),R1\=R2.
+\end{lstlisting}
+
+Test it:
+\begin{lstlisting}
+?- sameDistrict(hongmenyan,ajukejiacai).
+true .
+
+?- sameDistrict(muwushaokao,diandude).
+true .
+\end{lstlisting}
+
+We can also print all the restaurant pairs where they have one or more branches in the same district.
+\begin{lstlisting}
+assertz((sameDistrict(R1,R2):-branch(R1,A1),branch(R2,A2),district(A1,D),district(A2,D),R1\=R2)).
+assertz((printList([]))).
+assertz((printList([H|T]):-write(H),nl,printList(T))).
+
+?- setof((R1,R2), sameDistrict(R1,R2), Result), printList(Result).
+ajukejiacai,dagangxianmiaoshaoji
+ajukejiacai,diandude
+ajukejiacai,hongmenyan
+ajukejiacai,huangmenjimifan
+ajukejiacai,mixuebingcheng
+ajukejiacai,muwushaokao
+ajukejiacai,shaxianxiaochi
+ajukejiacai,tongxianghui
+ajukejiacai,yangguofu
+dagangxianmiaoshaoji,ajukejiacai
+dagangxianmiaoshaoji,diandude
+dagangxianmiaoshaoji,hongmenyan
+dagangxianmiaoshaoji,huangmenjimifan
+dagangxianmiaoshaoji,mixuebingcheng
+dagangxianmiaoshaoji,muwushaokao
+dagangxianmiaoshaoji,shaxianxiaochi
+dagangxianmiaoshaoji,tongxianghui
+dagangxianmiaoshaoji,yangguofu
+diandude,ajukejiacai
+diandude,dagangxianmiaoshaoji
+diandude,hongmenyan
+diandude,huangmenjimifan
+...
+% too much, omitted
+\end{lstlisting}
+
+\section{Experience}
+When solving Qestion 2, I met a problem.
+
+For example, I want to find out which districts have restaurants of yuecai. I tried the code below, but the result it produced was strange.
+\begin{lstlisting}
+?- setof(D, R^A^(restaurant(R,_,yuecai), branch(R,A), district(A,D)), Result).
+Result = [panyu, tianhe, yuexiu] ;
+Result = [baiyun, panyu, yuexiu] ;
+Result = [baiyun, haizhu, huadu, liwan, panyu, tianhe].
+\end{lstlisting}
+
+Why three different lists? However, the correct code is:
+\begin{lstlisting}
+?- setof(D, R^Y^A^(restaurant(R,Y,yuecai), branch(R,A), district(A,D)), Result).
+Result = [baiyun, haizhu, huadu, liwan, panyu, tianhe, yuexiu].
+\end{lstlisting}
+Note that the variable `Y' cannot be replaced by the anonymous variable `\_'. Otherwise the result will be three lists instead of one, because there are restaurants founded in there different years having both yuecai and xiangcai, grouped by area `A' and restaurant `R'. Thanks our TAs to help me understand this trick!
+
+%\clearpage
+%\bibliography{E:/Papers/LiuLab}
+%\bibliographystyle{apalike}
+\end{document} 
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
