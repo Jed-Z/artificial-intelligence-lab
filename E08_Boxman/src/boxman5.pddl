@@ -1,0 +1,68 @@
+(define (problem prob)
+    (:domain boxman)
+
+    ; 墙壁、草地等无效位置不需要视作object
+    (:objects
+        P25 P26 P27 P32 P33 P34 P35 P36 P37 P42 P44 P45 P52 P53 P54 P55 P64 P65 P74 P75 - location
+        BOX1 BOX2 BOX3 - physob
+    )
+
+    (:init
+        (at BOX1 P34)
+        (at BOX2 P45)
+        (at BOX3 P53)
+        (at G P52)
+        
+        (clear P25)
+        (clear P26)
+        (clear P27)
+        (clear P32)
+        (clear P33)
+        (clear P35)
+        (clear P36)
+        (clear P37)
+        (clear P42)
+        (clear P44)
+        (clear P52)
+        (clear P54)
+        (clear P55)
+        (clear P64)
+        (clear P65)
+        (clear P74)
+        (clear P75)
+
+
+        (left P32 P42)
+        (left P42 P52)
+        (left P34 P44)
+        (left P44 P54)
+        (left P54 P64)
+        (left P64 P74)
+        (left P25 P35)
+        (left P35 P45)
+        (left P45 P55)
+        (left P55 P65)
+        (left P65 P75)
+        (left P26 P36)
+        (left P27 P37)
+        (lower P25 P26)
+        (lower P26 P27)
+        (lower P32 P33)
+        (lower P33 P34)
+        (lower P34 P35)
+        (lower P35 P36)
+        (lower P36 P37)
+        (lower P44 P45)
+        (lower P52 P53)
+        (lower P53 P54)
+        (lower P54 P55)
+        (lower P64 P65)
+        (lower P74 P75)
+    )
+
+    (:goal (and
+        (not (clear P32))
+        (not (clear P35))
+        (not (clear P45))
+    ))
+)
