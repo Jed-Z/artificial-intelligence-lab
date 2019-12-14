@@ -1,0 +1,16 @@
+China 50 50 50 40 9 9 5
+Japan 28 9 29 15 4 1 5
+South_Korea 17 15 27 19 3 3 2
+Iran 25 40 28 18 5 5 5
+Saudi_Arabia 28 40 50 26 2 9 9
+Iraq 50 50 40 40 1 5 4
+Qatar 50 40 40 40 9 5 9
+United_Arab_Emirates 50 40 50 40 9 9 3
+Uzbekistan 40 40 40 40 5 4 9
+Thailand 50 50 50 40 9 17 17
+Vietnam 50 50 50 50 5 17 17
+Oman 50 50 40 50 9 17 9
+Bahrain 40 40 50 50 9 9 9
+North_Korea 40 32 50 50 17 9 9
+Indonesia 50 50 50 50 9 17 17
+Australia 16 21 30 30 9 2 1
